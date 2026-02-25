@@ -7,7 +7,7 @@ const { body } = require('express-validator');
 //* import controller
 const coursesController = require('../controllers/controller');
 
-//# Start API
+//# Start APIs
 router
   .route('/')
 
@@ -39,6 +39,6 @@ router
 
   //! Delete a course
   .delete(coursesController.deleteCourse);
-//# End API
+//# End APIs
 
 module.exports = router;

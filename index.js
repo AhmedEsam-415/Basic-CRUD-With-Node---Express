@@ -19,6 +19,7 @@ mongoose.connect(uri).then(() => {
 //& [ express.json() ] is a set of express.js Middleware
 app.use(express.json());
 
+// & [ app.use() ] is a set of express.js Middleware to use [ coursesRouter ] in the application with [ /api/courses ] as a prefix for all APIs in the [ coursesRouter ]
 app.use('/api/courses', coursesRouter);
 
 app.listen(5000, () => {

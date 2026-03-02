@@ -35,7 +35,17 @@ router
   .get(coursesController.getSingleCourse)
 
   //! Update a course
-  .patch(coursesController.updateCourse)
+  .patch(
+    [
+      body('title')
+        .notEmpty()
+        .isLength({ min: 2 })
+        .withMessage('Title at least is 2 digits'),
+
+      body('price').notEmpty().withMessage('Require'),
+    ],
+    coursesController.updateCourse
+  )
 
   //! Delete a course
   .delete(coursesController.deleteCourse);

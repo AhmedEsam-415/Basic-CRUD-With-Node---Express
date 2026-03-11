@@ -6,8 +6,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 
-const coursesRouter = require('./routes/courses-routes');
 const httpStatusText = require('./utils/httpStatuseText');
+
+const coursesRouter = require('./routes/courses-routes');
+const usersRouter = require('./routes/users-routes');
 
 require('dotenv').config();
 
@@ -20,14 +22,23 @@ app.use(express.json());
 //& Adds headers: Access-Control-Allow-Origin: *
 app.use(cors());
 
-//& [ app.use() ] is a set of express.js Middleware to use [ coursesRouter ] in the application with [ /api/courses ] as a prefix for all APIs in the [ coursesRouter ]
+//& All APIs in the "routes" folder will start with [ /api ]
 app.use('/api/courses', coursesRouter);
+app.use('/api/users', usersRouter);
 
 // 404 handler (أي route غلط)
-app.use((req, res) => {
+app.use((req, res, next) => {
   res.status(404).json({
-    status: httpStatusText.FAIL,
+    status: httpStatusText.ERROR,
     data: { error: 'Route Not Found' },
+  });
+});
+
+// 500 handler (أي error في السيرفر)
+app.use((err, req, res, next) => {
+  res.status(err.statusCode || 500).json({
+    status: err.statusText || httpStatusText.ERROR,
+    data: { error: err.message },
   });
 });
 

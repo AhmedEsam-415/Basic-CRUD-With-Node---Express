@@ -5,16 +5,18 @@ const router = express.Router();
 const { body } = require('express-validator');
 
 //* import controller
-const coursesController = require('../controllers/controller');
+const coursesController = require('../controllers/coursesController');
+
+//! get    => Get All Coursese & Single Course
+//! post   => Create a New Course
+//! patch  => Update a course
+//! delete => Delete a course
 
 //# Start APIs
 router
   .route('/')
 
-  //! Get All Coursese
   .get(coursesController.getAllCourses)
-
-  //! Create a New Course
   .post(
     [
       body('title')
@@ -24,17 +26,13 @@ router
 
       body('price').notEmpty().withMessage('Require'),
     ],
-
     coursesController.creatNewCourse
   );
 
 router
   .route('/:courseID')
 
-  //! Get Single Course
   .get(coursesController.getSingleCourse)
-
-  //! Update a course
   .patch(
     [
       body('title')
@@ -46,8 +44,6 @@ router
     ],
     coursesController.updateCourse
   )
-
-  //! Delete a course
   .delete(coursesController.deleteCourse);
 //# End APIs
 

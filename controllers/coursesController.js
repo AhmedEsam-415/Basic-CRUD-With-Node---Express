@@ -1,12 +1,14 @@
-//@ import data
+//@ import data From DB
 let Course = require('../Schema/course-model');
 
 //& express-validator is a set of express.js middlewares
 const { validationResult } = require('express-validator');
 
 const httpStatusText = require('../utils/httpStatuseText');
+const asyncWrapper = require('../utils/asyncWrapper');
+const AppError = require('../utils/appError');
 
-const getAllCourses = async (req, res) => {
+const getAllCourses = asyncWrapper(async (req, res) => {
   // Handle Pagination Data from Query
   const qyery = req.query;
 
@@ -16,6 +18,7 @@ const getAllCourses = async (req, res) => {
 
   // Get All Courses from Database useing Course Model
   const courses = await Course.find({}, { __v: 0 }).limit(limit).skip(skip);
+
   if (courses.length >= 1) {
     {
       res.json({ status: httpStatusText.SUCCESS, data: { courses } });
@@ -26,15 +29,13 @@ const getAllCourses = async (req, res) => {
       data: { courses: 'No Data' },
     });
   }
-};
+});
 
-const creatNewCourse = async (req, res) => {
+const creatNewCourse = asyncWrapper(async (req, res, next) => {
   // Hadle Validation Errors
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res
-      .status(400)
-      .json({ status: httpStatusText.FAIL, data: { errors: errors.array() } });
+    return next(AppError.create('Invalid Data', 400, httpStatusText.FAIL));
   }
 
   // Create a New Course
@@ -42,37 +43,25 @@ const creatNewCourse = async (req, res) => {
   await newCourse.save();
 
   res.status(201).json({ status: httpStatusText.SUCCESS, data: { newCourse } });
-};
+});
 
-const getSingleCourse = async (req, res) => {
-  try {
-    const course = await Course.findById(req.params.courseID, { __v: 0 });
+const getSingleCourse = asyncWrapper(async (req, res, next) => {
+  const course = await Course.findById(req.params.courseID, { __v: 0 });
 
-    if (!course) {
-      return res.status(404).json({
-        status: httpStatusText.FAIL,
-        data: { error: 'course Not Found' },
-      });
-    }
-
-    res.json({ status: httpStatusText.SUCCESS, data: { course } });
-  } catch (err) {
-    return res.status(500).json({
-      status: httpStatusText.ERROR,
-      data: { error: err.message },
-    });
+  if (!course) {
+    return next(AppError.create('course Not Found', 404, httpStatusText.FAIL));
   }
-};
 
-const updateCourse = async (req, res) => {
+  res.json({ status: httpStatusText.SUCCESS, data: { course } });
+});
+
+const updateCourse = asyncWrapper(async (req, res, next) => {
   let course = await Course.findById(req.params.courseID);
 
   // Hadle Validation Errors
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res
-      .status(400)
-      .json({ status: httpStatusText.FAIL, data: { errors: errors.array() } });
+    return next(AppError.create('Invalid Data', 400, httpStatusText.FAIL));
   }
 
   // Update Course Data
@@ -80,26 +69,17 @@ const updateCourse = async (req, res) => {
   await course.save();
 
   res.status(200).json({ status: httpStatusText.SUCCESS, data: { course } });
-};
+});
 
-const deleteCourse = async (req, res) => {
-  try {
-    let course = await Course.findByIdAndDelete(req.params.courseID);
+const deleteCourse = asyncWrapper(async (req, res, next) => {
+  let course = await Course.findByIdAndDelete(req.params.courseID);
 
-    if (!course) {
-      return res
-        .status(404)
-        .json({ status: httpStatusText.FAIL, msg: 'course Not Found' });
-    }
-
-    res.status(200).json({ status: httpStatusText.SUCCESS, data: null });
-    // ======= //
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ status: httpStatusText.ERROR, data: { error: err.message } });
+  if (!course) {
+    return next(AppError.create('course Not Found', 404, httpStatusText.FAIL));
   }
-};
+
+  res.status(200).json({ status: httpStatusText.SUCCESS, data: null });
+});
 
 module.exports = {
   getAllCourses,
